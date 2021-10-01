@@ -110,6 +110,14 @@ class UploadCsv(Resource):
         materi_ok = materi_nostopword.apply(sentencizer)
         df['text_preprocessing'] = materi_ok
 
+        data_text = []
+        for index,item in enumerate(df['review']):
+            data_text.append({
+                "review": item,
+                "clean": convert_csv_to_array(df.to_numpy(),1)[index],
+                "text_preprocessing": convert_csv_to_array(df.to_numpy(),2)[index]
+            })
+
 
         # pelabelan
         pos_lexicon = pd.read_csv('static_file/positive - positive.csv',sep='\t')
@@ -192,29 +200,40 @@ class UploadCsv(Resource):
         cek_df['text'] = df["text_preprocessing"].copy()
         cek_df['sentiment']  = df_sen['sentiment'].copy()
 
-        result = []
-        for sentimen in cek_df['sentiment']:
-            if(sentimen>=0):
-                result.append('positif')
+        data_label = []
+        global positive
+        global negative
+        positive = 0
+        negative = 0
+
+        def getLabelHasil(value):
+            global positive
+            global negative
+            if value >= 0:
+                positive+= 1
+                return "positif"
             else:
-                result.append('negatif')
-                
-        cek_df['hasil'] = result
+                negative+= 1
+                return "negatif"
+
+        for index,item in enumerate(cek_df['text']):
+            
+            data_label.append({
+                "text": item,
+                "sentiment": convert_csv_to_array(cek_df.to_numpy(),1)[index],
+                "hasil": getLabelHasil(convert_csv_to_array(cek_df.to_numpy(),1)[index])
+            })
 
         return {
-            "data_csv": {
-                "review": convert_csv_to_array(df.to_numpy(),0),
-                "clean": convert_csv_to_array(df.to_numpy(),1),
-                "text_preprocessing": convert_csv_to_array(df.to_numpy(),2)
+            "data_text": {
+                "list": data_text
             },
             "data_label": {
-                "text": convert_csv_to_array(cek_df.to_numpy(),0),
-                "sentiment": convert_csv_to_array(cek_df.to_numpy(),1),
-                "hasil": convert_csv_to_array(cek_df.to_numpy(),2)
-            },
-            "data_label_percent": {
-                "positive": convert_csv_to_array(cek_df.to_numpy(),2).count("positif")/len(convert_csv_to_array(cek_df.to_numpy(),2)),
-                "negative": convert_csv_to_array(cek_df.to_numpy(),2).count("negatif")/len(convert_csv_to_array(cek_df.to_numpy(),2))
+                "list": data_label,
+                "percent": {
+                    "positive": positive/len(data_label),
+                    "negative": negative/len(data_label)
+                }
             }
         }
 
