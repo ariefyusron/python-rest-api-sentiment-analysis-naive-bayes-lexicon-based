@@ -18,74 +18,74 @@ parser = reqparse.RequestParser()
 lexicon = dict()
 
 def convert_csv_to_array(df_numpy,column):
-  result = []
-  for item in df_numpy:
-    result.append(item[column])
-  return result
+    result = []
+    for item in df_numpy:
+        result.append(item[column])
+    return result
 
 def clean_text(Text):
-  # remove backslash-apostrophe 
-  Text = re.sub("\'", "", Text) 
-  # remove everything except alphabets 
-  Text = re.sub("[^a-zA-Z]"," ",Text) 
-  # remove whitespaces 
-  Text = ' '.join(Text.split()) 
-  # convert text to lowercase 
-  Text = Text.lower() 
-  
-  return Text
+    # remove backslash-apostrophe 
+    Text = re.sub("\'", "", Text) 
+    # remove everything except alphabets 
+    Text = re.sub("[^a-zA-Z]"," ",Text) 
+    # remove whitespaces 
+    Text = ' '.join(Text.split()) 
+    # convert text to lowercase 
+    Text = Text.lower() 
+
+    return Text
 
 def df_tokenizer(df):
-  nlp = Indonesian()  # use directly
-  print(df)
-  tokenized = [token.text for token in nlp(df)]
-  return tokenized
+    nlp = Indonesian()  # use directly
+    print(df)
+    tokenized = [token.text for token in nlp(df)]
+    return tokenized
 
 def stopword_removal(token):
-  stopwords = spacy.lang.id.stop_words.STOP_WORDS
-  stopwords.add("yuk")
-  stopwords.add("ya")
-  stopwords.add("tuh")
-  stopwords.add("sih")
-  stopwords.add("ngga")
-  stopwords.add("nggak")
-  stopwords.add("yak")
-  stopwords.add("lho")
-  stopwords.add("loh")
-  stopwords.add("yak")
-  stopwords.add("deh")
+    stopwords = spacy.lang.id.stop_words.STOP_WORDS
+    stopwords.add("yuk")
+    stopwords.add("ya")
+    stopwords.add("tuh")
+    stopwords.add("sih")
+    stopwords.add("ngga")
+    stopwords.add("nggak")
+    stopwords.add("yak")
+    stopwords.add("lho")
+    stopwords.add("loh")
+    stopwords.add("yak")
+    stopwords.add("deh")
 
-  clean = []
-  for i in token:
-      if i not in stopwords:
-          clean.append(i)
-  return clean
+    clean = []
+    for i in token:
+        if i not in stopwords:
+            clean.append(i)
+    return clean
 
 def sentencizer(token):
-  value = " ".join(str(v) for v in token) #join as string
-  return value
+    value = " ".join(str(v) for v in token) #join as string
+    return value
 
 # berfungsi untuk menulis sentimen kata
 def found_word(ind,words,word,sen,sencol,sentiment,add):
-  lexicon = pd.read_csv('static_file/modified_full_lexicon.csv')
-  lexicon = lexicon.reset_index(drop=True)
+    lexicon = pd.read_csv('static_file/modified_full_lexicon.csv')
+    lexicon = lexicon.reset_index(drop=True)
 
-  negasi = ['bukan','tidak','ga','gk']
-  lexicon_word = lexicon['word'].to_list()
-  # jika sudah termasuk dalam bag of words matrix, maka tinggal menambah nilainya
-  if word in sencol:
-      sen[sencol.index(word)] += 1
-  else:
-  #jika tidak, menambahkan kata baru
-      sencol.append(word)
-      sen.append(1)
-      add += 1
-  if (words[ind-1] in negasi):
-      sentiment += -lexicon['weight'][lexicon_word.index(word)]
-  else:
-      sentiment += lexicon['weight'][lexicon_word.index(word)]
-  
-  return sen,sencol,sentiment,add
+    negasi = ['bukan','tidak','ga','gk']
+    lexicon_word = lexicon['word'].to_list()
+    # jika sudah termasuk dalam bag of words matrix, maka tinggal menambah nilainya
+    if word in sencol:
+        sen[sencol.index(word)] += 1
+    else:
+    #jika tidak, menambahkan kata baru
+        sencol.append(word)
+        sen.append(1)
+        add += 1
+    if (words[ind-1] in negasi):
+        sentiment += -lexicon['weight'][lexicon_word.index(word)]
+    else:
+        sentiment += lexicon['weight'][lexicon_word.index(word)]
+
+    return sen,sencol,sentiment,add
 
 
 class UploadCsv(Resource):
@@ -202,20 +202,20 @@ class UploadCsv(Resource):
         cek_df['hasil'] = result
 
         return {
-          "data_csv": {
-            "review": convert_csv_to_array(df.to_numpy(),0),
-            "clean": convert_csv_to_array(df.to_numpy(),1),
-            "text_preprocessing": convert_csv_to_array(df.to_numpy(),2)
-          },
-          "data_label": {
-            "text": convert_csv_to_array(cek_df.to_numpy(),0),
-            "sentiment": convert_csv_to_array(cek_df.to_numpy(),1),
-            "hasil": convert_csv_to_array(cek_df.to_numpy(),2)
-          },
-          "data_label_percent": {
-            "positive": convert_csv_to_array(cek_df.to_numpy(),2).count("positif")/len(convert_csv_to_array(cek_df.to_numpy(),2)),
-            "negative": convert_csv_to_array(cek_df.to_numpy(),2).count("negatif")/len(convert_csv_to_array(cek_df.to_numpy(),2))
-          }
+            "data_csv": {
+                "review": convert_csv_to_array(df.to_numpy(),0),
+                "clean": convert_csv_to_array(df.to_numpy(),1),
+                "text_preprocessing": convert_csv_to_array(df.to_numpy(),2)
+            },
+            "data_label": {
+                "text": convert_csv_to_array(cek_df.to_numpy(),0),
+                "sentiment": convert_csv_to_array(cek_df.to_numpy(),1),
+                "hasil": convert_csv_to_array(cek_df.to_numpy(),2)
+            },
+            "data_label_percent": {
+                "positive": convert_csv_to_array(cek_df.to_numpy(),2).count("positif")/len(convert_csv_to_array(cek_df.to_numpy(),2)),
+                "negative": convert_csv_to_array(cek_df.to_numpy(),2).count("negatif")/len(convert_csv_to_array(cek_df.to_numpy(),2))
+            }
         }
 
 api.add_resource(UploadCsv, '/api/v1/upload-file-csv')
